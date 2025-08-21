@@ -1,368 +1,176 @@
-// celebration.js — всё в одном файле
-
-(function () {
-  // ---------- БАЗОВЫЕ СТИЛИ И ШРИФТ ----------
+// celebration.js
+(function() {
+  // ---------- СТИЛИ ----------
   const style = document.createElement('style');
   style.textContent = `
   @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
 
-  :root{
-    --bg1: #8EC5FC;
-    --bg2: #E0C3FC;
-    --text: #111827;
-    --btn-bg: #3FFDEA;
-    --btn-text: #0F172A;
-    --heart: #FF4D6D;
-    --fade-duration: 800ms;
-  }
+  html, body { margin:0; padding:0; height:100%; width:100%; overflow:hidden; font-family:'Nunito', sans-serif; }
+  body { background: linear-gradient(135deg, #8EC5FC, #E0C3FC); display:flex; justify-content:center; align-items:center; }
 
-  * { box-sizing: border-box; }
-  html, body { height: 100%; margin:0; }
-  body {
-    font-family: 'Nunito', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    background: linear-gradient(135deg, var(--bg1), var(--bg2));
-    overflow: hidden;
-  }
-
-  .app {
-    position: fixed; inset: 0; display: grid; place-items: center;
-  }
-
-  .center {
-    display: grid; gap: 24px; place-items: center; text-align: center;
-  }
+  .app { display:flex; flex-direction:column; justify-content:center; align-items:center; position:relative; width:100%; height:100%; }
 
   .btn {
-    padding: 16px 28px;
-    border: none; border-radius: 9999px;
-    background: var(--btn-bg); color: var(--btn-text);
-    font-weight: 800; font-size: 20px; letter-spacing: .3px;
-    cursor: pointer;
-    box-shadow: 0 12px 30px rgba(0,0,0,.12), 0 2px 6px rgba(0,0,0,.08);
-    transition: transform .15s ease, box-shadow .2s ease, opacity var(--fade-duration) ease;
-  }
-  .btn:hover { transform: translateY(-1px) scale(1.02); }
-  .btn:active { transform: translateY(1px) scale(.98); }
-
-  .message {
-    position: absolute; inset: 0;
-    display: grid; place-items: center; text-align: center;
-    pointer-events: none;
+    padding:20px 40px;
+    border:none;
+    border-radius:50px;
+    background:#3FFDEA;
+    color:#0F172A;
+    font-weight:800;
+    font-size:1.5rem;
+    cursor:pointer;
+    z-index:10;
   }
 
-  .message h1 {
-    margin: 0; padding: 0 24px;
-    font-size: clamp(32px, 6vw, 64px);
-    font-weight: 900;
-    color: #0b0b0b;
-    text-shadow: 0 1px 0 rgba(255,255,255,.8);
-    opacity: 0; transform: translateY(10px);
-    transition: opacity var(--fade-duration) ease, transform var(--fade-duration) ease;
-    border-radius: 18px;
-  }
-  .message.show h1 { opacity: 1; transform: translateY(0); }
+  .message-block { display:flex; flex-direction:column; align-items:center; text-align:center; position:relative; z-index:5; }
+  .message-block div { font-size:2.5rem; font-weight:900; margin:0; opacity:0; transition:opacity 0.5s; line-height:1.1; }
+  .message-block .show { opacity:1; }
 
-  .fade-out { opacity: 0 !important; transition: opacity var(--fade-duration) ease; }
+  .hearts-inline { display:flex; gap:10px; font-size:2rem; margin-top:5px; opacity:0; transition:opacity 0.5s; }
+  .hearts-inline.show { opacity:1; }
 
-  /* Парящие сердечки */
-  .heart {
-    position: absolute;
-    font-size: 18px;
-    color: var(--heart);
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(.8) rotate(0deg);
-    animation: floatUp 3.2s ease-out forwards;
-    filter: drop-shadow(0 6px 20px rgba(255,77,109,0.4));
-    will-change: transform, opacity;
-  }
-  @keyframes floatUp {
-    0%   { opacity: 0; transform: translate(-50%, 0) scale(.7) rotate(0deg); }
-    10%  { opacity: .9; }
-    60%  { opacity: .9; }
-    100% { opacity: 0; transform: translate(-50%, -140px) scale(1.2) rotate(12deg); }
-  }
+  .heart-bg { position:absolute; inset:0; pointer-events:none; opacity:0; z-index:1; }
+  .heart-bg .heart { position:absolute; font-size:18px; color:#FF4D6D; opacity:0; transform:translate(-50%,-50%) scale(0.8); animation:floatUp 3s ease-out infinite; }
+  @keyframes floatUp { 0%{opacity:0; transform:translate(-50%,0) scale(0.7);} 10%,60%{opacity:.9;} 100%{opacity:0; transform:translate(-50%,-140px) scale(1.2);} }
 
-  /* Три сердечка внизу */
-  .bottom-hearts {
-    position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%);
-    display: flex; gap: 18px; opacity: 0; transition: opacity var(--fade-duration) ease;
-  }
-  .bottom-hearts.show { opacity: 1; }
-  .bottom-hearts .bheart {
-    font-size: clamp(22px, 3.5vw, 34px);
-    color: var(--heart);
-    filter: drop-shadow(0 6px 16px rgba(255,77,109,0.35));
-    animation: gentle 2.6s ease-in-out infinite;
-  }
-  .bottom-hearts .bheart:nth-child(2){ animation-delay: .3s; }
-  .bottom-hearts .bheart:nth-child(3){ animation-delay: .6s; }
-  @keyframes gentle {
-    0% { transform: translateY(0) scale(1); }
-    50% { transform: translateY(-6px) scale(1.05); }
-    100% { transform: translateY(0) scale(1); }
-  }
+  .fireworks-layer { position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity 1s; }
+  .fireworks-layer.show { opacity:1; }
 
-  /* Слой салюта */
-  .fireworks-layer {
-    position: absolute; inset: 0; pointer-events: none; opacity: 0;
-    transition: opacity 900ms ease;
-    background: radial-gradient(1200px 800px at 50% 50%, rgba(10,10,20,.25), transparent 65%) ,
-                linear-gradient(135deg, #081226, #140A2B 60%, #1B1036);
-  }
-  .fireworks-layer.show { opacity: 1; }
+  .year-title { position:absolute; inset:0; display:grid; place-items:center; font-size:4rem; font-weight:900; color:white; text-shadow:0 4px 20px rgba(0,0,0,0.6); opacity:0; transition:opacity 1s; }
+  .year-title.show { opacity:1; }
 
-  .year-title {
-    position: absolute; inset: 0; display: grid; place-items: center;
-    color: #F8FAFC; text-align: center;
-    text-shadow: 0 8px 30px rgba(0,0,0,.55);
-    font-size: clamp(36px, 7vw, 84px);
-    font-weight: 900;
-    letter-spacing: .5px;
-    opacity: 0; transform: translateY(16px);
-    transition: opacity 900ms ease, transform 900ms ease;
-  }
-  .year-title.show { opacity: 1; transform: translateY(0); }
+  .replay { position:absolute; bottom:10px; right:10px; font-size:14px; color:rgba(255,255,255,0.4); cursor:pointer; }
+  .replay:hover { color:rgba(255,255,255,0.8); }
   `;
   document.head.appendChild(style);
 
   // ---------- DOM ----------
   const app = document.createElement('div');
-  app.className = 'app';
+  app.className='app';
   document.body.appendChild(app);
 
-  const center = el('div', 'center');
-  const btn = el('button', 'btn', 'Нажать сюда');
-  center.appendChild(btn);
-  app.appendChild(center);
+  const btn = document.createElement('button');
+  btn.className='btn';
+  btn.textContent='Нажать сюда';
+  app.appendChild(btn);
 
-  const messageLayer = el('div', 'message');
-  const messageH1 = el('h1', '', '');
-  messageLayer.appendChild(messageH1);
-  app.appendChild(messageLayer);
+  const messageBlock = document.createElement('div');
+  messageBlock.className='message-block';
+  const msg1 = document.createElement('div');
+  msg1.textContent='Люблю тебя';
+  const msg2 = document.createElement('div');
+  msg2.textContent='Спасибо, что ты есть';
+  const heartsInline = document.createElement('div');
+  heartsInline.className='hearts-inline';
+  heartsInline.textContent='❤️❤️❤️';
+  messageBlock.appendChild(msg1);
+  messageBlock.appendChild(msg2);
+  messageBlock.appendChild(heartsInline);
+  app.appendChild(messageBlock);
 
-  const bottomHearts = el('div', 'bottom-hearts');
-  bottomHearts.innerHTML = `<span class="bheart">❤️</span><span class="bheart">❤️</span><span class="bheart">❤️</span>`;
-  app.appendChild(bottomHearts);
+  const heartBg = document.createElement('div');
+  heartBg.className='heart-bg';
+  for(let i=0;i<15;i++){
+    const h=document.createElement('div');
+    h.className='heart';
+    h.textContent='❤️';
+    h.style.left=Math.random()*100+'vw';
+    h.style.top=(Math.random()*50+40)+'vh';
+    h.style.animationDelay=Math.random()*3+'s';
+    h.style.fontSize=Math.floor(Math.random()*18+14)+'px';
+    heartBg.appendChild(h);
+  }
+  app.appendChild(heartBg);
 
-  // Слой для салюта
-  const fireworksLayer = el('div', 'fireworks-layer');
+  const fireworks = document.createElement('div');
+  fireworks.className='fireworks-layer';
   const canvas = document.createElement('canvas');
-  fireworksLayer.appendChild(canvas);
-  const yearTitle = el('div', 'year-title', 'Нам 1 год');
-  fireworksLayer.appendChild(yearTitle);
-  app.appendChild(fireworksLayer);
+  fireworks.appendChild(canvas);
+  const yearTitle = document.createElement('div');
+  yearTitle.className='year-title';
+  yearTitle.textContent='Нам 1 год';
+  fireworks.appendChild(yearTitle);
+  const replay = document.createElement('div');
+  replay.className='replay';
+  replay.textContent='Смотреть снова';
+  fireworks.appendChild(replay);
+  app.appendChild(fireworks);
 
-  // ---------- СОСТОЯНИЕ И УТИЛИТЫ ----------
-  let heartsTimer = null;
-  let spawning = false;
+  let fwAnim;
 
-  function el(tag, cls, text) {
-    const e = document.createElement(tag);
-    if (cls) e.className = cls;
-    if (text != null) e.textContent = text;
-    return e;
-  }
+  function wait(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
-  function showMessage(text) {
-    messageH1.textContent = text;
-    messageLayer.classList.add('show');
-    // небольшая задержка, чтобы transition сработал
-    requestAnimationFrame(() => {
-      messageH1.offsetHeight; // reflow
-      messageLayer.classList.add('show');
-      messageH1.classList.add('show');
-    });
-  }
+  async function startSequence(){
+    btn.style.display='none';
+    heartBg.style.opacity=1;
+    msg1.classList.add('show');
 
-  function hideMessage() {
-    messageLayer.classList.remove('show');
-    messageH1.classList.remove('show');
-  }
-
-  function random(min, max) { return Math.random() * (max - min) + min; }
-
-  function spawnHeart() {
-    const h = el('div', 'heart', '❤️');
-    const x = random(8, 92); // проценты ширины
-    const yStart = random(60, 92);
-    h.style.left = x + 'vw';
-    h.style.top = yStart + 'vh';
-    h.style.fontSize = random(14, 28) + 'px';
-    h.style.transform += ` rotate(${random(-12,12)}deg)`;
-    document.body.appendChild(h);
-    h.addEventListener('animationend', () => h.remove());
-  }
-
-  function startHearts() {
-    if (spawning) return;
-    spawning = true;
-    heartsTimer = setInterval(() => {
-      // пачка из нескольких сердечек, чтобы выглядело богаче
-      for (let i = 0; i < 3; i++) {
-        setTimeout(spawnHeart, i * 120);
-      }
-    }, 420);
-  }
-
-  function stopHearts() {
-    spawning = false;
-    if (heartsTimer) clearInterval(heartsTimer);
-    heartsTimer = null;
-  }
-
-  // ---------- ЛОГИКА СЦЕНАРИЯ ----------
-  btn.addEventListener('click', async () => {
-    btn.disabled = true;
-    btn.style.opacity = '0';
-    setTimeout(() => btn.remove(), 400);
-
-    // Этап 1: сердца + "Люблю тебя"
-    startHearts();
-    showMessage('Люблю тебя');
-
-    // Через 3 секунды: "Спасибо что ты есть" + 3 сердечка внизу
     await wait(3000);
-    showMessage('Спасибо что ты есть');
-    bottomHearts.classList.add('show');
+    msg2.classList.add('show');
+    heartsInline.classList.add('show');
 
-    // Через 5 секунд: плавное исчезновение всего
     await wait(5000);
-    bottomHearts.classList.remove('show');
-    messageH1.classList.add('fade-out');
+    msg1.classList.remove('show');
+    msg2.classList.remove('show');
+    heartsInline.classList.remove('show');
+    heartBg.style.opacity=0;
 
-    // короткая пауза на fade
     await wait(800);
-    hideMessage();
-    stopHearts();
-
-    // Этап 2: затемнение, заголовок "Нам 1 год" + салют
-    fireworksLayer.classList.add('show');
-    await wait(100);
+    fireworks.classList.add('show');
     yearTitle.classList.add('show');
     startFireworks(canvas);
+
+    await wait(2000);
+    replay.style.display='block';
+  }
+
+  btn.addEventListener('click',startSequence);
+
+  replay.addEventListener('click',()=>{
+    fireworks.classList.remove('show');
+    yearTitle.classList.remove('show');
+    replay.style.display='none';
+    stopFireworks();
+    btn.style.display='block';
+    msg1.classList.remove('show');
+    msg2.classList.remove('show');
+    heartsInline.classList.remove('show');
+    heartBg.style.opacity=0;
   });
 
-  function wait(ms){ return new Promise(r => setTimeout(r, ms)); }
-
-  // ---------- САЛЮТ (канвас) ----------
-  function startFireworks(canvas) {
-    const ctx = canvas.getContext('2d');
-    let w, h, dpr;
-
-    function resize() {
-      dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-      w = window.innerWidth;
-      h = window.innerHeight;
-      canvas.width = Math.floor(w * dpr);
-      canvas.height = Math.floor(h * dpr);
-      canvas.style.width = w + 'px';
-      canvas.style.height = h + 'px';
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
+  function startFireworks(canvas){
+    const ctx=canvas.getContext('2d');
+    let w,h;
+    function resize(){ w=window.innerWidth; h=window.innerHeight; canvas.width=w; canvas.height=h; }
     resize();
-    window.addEventListener('resize', resize);
-
-    const rockets = [];
-    const particles = [];
-
-    function launch() {
-      // стартовая «ракета»
-      rockets.push({
-        x: random(w * .2, w * .8),
-        y: h + 10,
-        vx: random(-0.8, 0.8),
-        vy: random(-9.2, -11.8),
-        color: `hsl(${Math.floor(random(0,360))} 90% 60%)`,
-        explodeY: random(h * .25, h * .45)
-      });
-    }
-
-    function explode(x, y, baseHue) {
-      const count = Math.floor(random(60, 100));
-      for (let i = 0; i < count; i++) {
-        const angle = random(0, Math.PI * 2);
-        const speed = Math.pow(Math.random(), 0.35) * random(2, 6.6);
-        particles.push({
-          x, y,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          life: random(60, 110),
-          age: 0,
-          color: `hsl(${(baseHue + random(-18, 18) + 360) % 360} 100% ${Math.floor(random(52, 72))}%)`
-        });
-      }
-      // «искры-шлейф» в центре
-      for (let i = 0; i < 16; i++) {
-        particles.push({
-          x, y,
-          vx: random(-1.2, 1.2),
-          vy: random(-1.2, 1.2),
-          life: random(20, 40),
-          age: 0,
-          color: `hsl(${baseHue} 100% 85%)`
-        });
+    window.addEventListener('resize',resize);
+    const particles=[];
+    function addFirework(){
+      const x=w/2+(Math.random()-0.5)*w*0.6;
+      const y=h*0.4+Math.random()*h*0.3;
+      const color=`hsl(${Math.floor(Math.random()*360)},100%,60%)`;
+      for(let i=0;i<60;i++){
+        const angle=Math.random()*2*Math.PI;
+        const speed=Math.random()*5+2;
+        particles.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:100,age:0,color});
       }
     }
-
-    let lastTime = 0;
-    function tick(t) {
-      requestAnimationFrame(tick);
-      if (!lastTime) lastTime = t;
-      const dt = Math.min(32, t - lastTime) / 16.666; // ~frames
-      lastTime = t;
-
-      // фон затухания
-      ctx.fillStyle = 'rgba(10, 12, 24, 0.25)';
-      ctx.fillRect(0, 0, w, h);
-
-      // новые запуски
-      if (Math.random() < 0.05) launch();
-      if (Math.random() < 0.03) launch();
-
-      // ракеты
-      for (let i = rockets.length - 1; i >= 0; i--) {
-        const r = rockets[i];
-        r.vy += 0.12 * dt; // гравитация
-        r.x += r.vx * dt * 1.2;
-        r.y += r.vy * dt * 1.2;
-
-        // след
-        ctx.beginPath();
-        ctx.arc(r.x, r.y, 2.2, 0, Math.PI * 2);
-        ctx.fillStyle = '#fff';
-        ctx.fill();
-
-        if (r.vy >= 0 || r.y <= r.explodeY) {
-          const hue = parseInt(r.color.match(/hsl\((\d+)/)[1]) || Math.floor(random(0,360));
-          explode(r.x, r.y, hue);
-          rockets.splice(i, 1);
-        }
+    function tick(){
+      fwAnim=requestAnimationFrame(tick);
+      ctx.fillStyle='rgba(0,0,0,0.2)'; ctx.fillRect(0,0,w,h);
+      if(Math.random()<0.05) addFirework();
+      for(let i=particles.length-1;i>=0;i--){
+        const p=particles[i];
+        p.x+=p.vx; p.y+=p.vy; p.vy+=0.05; p.age++;
+        const alpha=1-p.age/p.life;
+        ctx.globalAlpha=alpha;
+        ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,2,0,Math.PI*2); ctx.fill();
+        if(p.age>=p.life) particles.splice(i,1);
       }
-
-      // частицы
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.age += dt;
-        p.vy += 0.08 * dt; // гравитация
-        p.x += p.vx * dt;
-        p.y += p.vy * dt;
-
-        const alpha = Math.max(0, 1 - p.age / p.life);
-        ctx.globalCompositeOperation = 'screen';
-        ctx.globalAlpha = alpha;
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 2.2, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.fill();
-
-        ctx.globalAlpha = 1;
-        ctx.globalCompositeOperation = 'source-over';
-
-        if (p.age >= p.life) particles.splice(i, 1);
-      }
+      ctx.globalAlpha=1;
     }
-
-    requestAnimationFrame(tick);
+    tick();
   }
+
+  function stopFireworks(){ if(fwAnim) cancelAnimationFrame(fwAnim); const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height);}
 })();
