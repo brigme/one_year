@@ -17,16 +17,16 @@
     background:#3FFDEA;
     color:#0F172A;
     font-weight:800;
-    font-size:1.5rem;
+    font-size:4rem;
     cursor:pointer;
     z-index:10;
   }
 
   .message-block { display:flex; flex-direction:column; align-items:center; text-align:center; position:relative; z-index:5; }
-  .message-block div { font-size:2.5rem; font-weight:900; margin:0; opacity:0; transition:opacity 0.5s; line-height:1.1; }
+  .message-block div { font-size:6rem; font-weight:900; margin:0; opacity:0; transition:opacity 0.5s; line-height:1.1; }
   .message-block .show { opacity:1; }
 
-  .hearts-inline { display:flex; gap:10px; font-size:2rem; margin-top:5px; opacity:0; transition:opacity 0.5s; }
+  .hearts-inline { display:flex; gap:10px; font-size:5rem; margin-top:5px; opacity:0; transition:opacity 0.5s; }
   .hearts-inline.show { opacity:1; }
 
   .heart-bg { position:absolute; inset:0; pointer-events:none; opacity:0; z-index:1; }
@@ -36,7 +36,7 @@
   .fireworks-layer { position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity 1s; }
   .fireworks-layer.show { opacity:1; }
 
-  .year-title { position:absolute; inset:0; display:grid; place-items:center; font-size:4rem; font-weight:900; color:white; text-shadow:0 4px 20px rgba(0,0,0,0.6); opacity:0; transition:opacity 1s; }
+  .year-title { position:absolute; inset:0; display:grid; place-items:center; font-size:7rem; font-weight:900; color:white; text-shadow:0 4px 20px rgba(0,0,0,0.6); opacity:0; transition:opacity 1s; }
   .year-title.show { opacity:1; }
 
   .replay { position:absolute; bottom:10px; right:10px; font-size:14px; color:rgba(255,255,255,0.4); cursor:pointer; }
